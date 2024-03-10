@@ -41,13 +41,15 @@ void on_child_exit() {
     reap_child_zombie(child_id);
     FILE *fptr;
     fptr = fopen("log_file.txt", "a");
-    fprintf(fptr, "Child process was terminated\n");
+    fprintf(fptr, "Child process %d was terminated\n", child_id);
     fclose(fptr);
 }
 
 void reap_child_zombie(int pid) {
-//    sleep(1);
-    kill(pid, SIGTERM);
+    int status;
+    if (waitpid(pid, &status, WNOHANG) > 0) {
+        kill(pid, SIGTERM);
+    }
 }
 
 void setup_environment() {
@@ -62,7 +64,7 @@ void shell() {
         read_input(input_command, sizeof (input_command));
         parsed_input = parse_input(input_command);
         evaluate_expression(parsed_input);
-        print_arr(parsed_input);
+//        print_arr(parsed_input);
 //        printf("%s", *parsed_input);
         switch (check_command(*parsed_input)) {
             case 1:
@@ -170,9 +172,10 @@ void execute_shell_builtin(char **command) {
 void execute_command(char** command) {
     child_id = fork();
     int status;
+
     int is_background = check_background(command);
     if (child_id == 0) {
-        print_arr(command);
+//        print_arr(command);
         execvp(*command, command);
         printf("Error\n");
         exit(0);
@@ -217,4 +220,3 @@ void print_arr(char** arr) {
     }
     printf("]\n");
 }
-// TODO: ZOMBIE - BUILTIN
