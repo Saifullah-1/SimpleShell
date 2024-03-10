@@ -23,6 +23,7 @@ void reap_child_zombie(int pid);
 int len = 0;
 char* variables[100];
 char* values[100];
+char cwd[200];
 int child_id;
 
 int main() {
@@ -53,19 +54,19 @@ void reap_child_zombie(int pid) {
 }
 
 void setup_environment() {
-    chdir("/home/saifullah");
+    chdir("/home");
 }
 
 void shell() {
+    char input_command[100];
     char** parsed_input;
     do {
-        char input_command[100];
-        printf(">> ");
+        getcwd(cwd, sizeof (cwd));
+        printf("%s >> ", cwd);
         read_input(input_command, sizeof (input_command));
+        if(strlen(input_command) == 1 && input_command[0] == '\n') continue;
         parsed_input = parse_input(input_command);
         evaluate_expression(parsed_input);
-//        print_arr(parsed_input);
-//        printf("%s", *parsed_input);
         switch (check_command(*parsed_input)) {
             case 1:
                 execute_shell_builtin(parsed_input);
@@ -77,7 +78,7 @@ void shell() {
                 break;
         }
     }
-    while (strncmp(*parsed_input, "exit", 4) != 0);
+    while (strncmp(input_command, "exit", 4) != 0);
     exit(0);
 }
 
@@ -93,7 +94,6 @@ char** parse_input(char input[]) {
         printf("Memory allocation failed\n");
         exit(1);
     }
-
     char* token = strtok(input, " "); // Split input string by space
     int i = 0;
     while (token != NULL) {
@@ -114,7 +114,6 @@ char** parse_input(char input[]) {
 void evaluate_expression(char** command) {
     char** ptr = command;
     while(*ptr != NULL) {
-//        printf("## %s\n", *ptr);
         if (*ptr[0] == '$') {
             for (int i = 0; i < len; ++i) {
                 if(strcmp(variables[i], *ptr) == 0) {
@@ -135,6 +134,10 @@ int check_command(char* command) {
 
 void execute_shell_builtin(char **command) {
     if (strcmp(*command, "cd") == 0) {
+        if (strcmp(command[1], "~") == 0) {
+            chdir("/home");
+            return;
+        }
         int d = chdir(*(command + 1));
         if(d == -1)
             printf("No such file or directory\n");
@@ -147,15 +150,12 @@ void execute_shell_builtin(char **command) {
             if(*(ptr+1) != NULL) strcat(init, " ");
             ptr++;
         }
-//        remove_char(init, '\"');
         variables[len] = strdup(strtok(init, "="));  // Tokenize and copy the variable part
         values[len] = strdup(strtok(NULL, "\0"));    // Tokenize and copy the value part
         len++;
-//        printf("%s %s\n", variables[len - 1], values[len - 1]);
     } else if(strcmp(*command, "echo") == 0) {
         char* var = command[1];
         remove_char(var, '\"');
-//        printf("asdsf %s %c\n", var, var[0]);
         if(var[0] != '$'){
             char** ptr = command;
             ptr++;
@@ -170,9 +170,20 @@ void execute_shell_builtin(char **command) {
 }
 
 void execute_command(char** command) {
+    if(command[1] != NULL && command[2] == NULL) {
+        char* param = command[1];
+        char** arg = parse_input(param);
+//        print_arr(arg);
+        int i = 1;
+        while (*arg != NULL) {
+            command[i++] = *arg;
+            arg++;
+        }
+        command[i] = NULL;
+    }
+
     child_id = fork();
     int status;
-
     int is_background = check_background(command);
     if (child_id == 0) {
 //        print_arr(command);
