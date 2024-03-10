@@ -41,7 +41,7 @@ void register_child_signal() {
 void on_child_exit() {
     reap_child_zombie(child_id);
     FILE *fptr;
-    fptr = fopen("log_file.txt", "a");
+    fptr = fopen("/home/saifullah/log_file.txt", "a");
     fprintf(fptr, "Child process %d was terminated\n", child_id);
     fclose(fptr);
 }
@@ -54,7 +54,7 @@ void reap_child_zombie(int pid) {
 }
 
 void setup_environment() {
-    chdir("/home");
+    chdir("/home/saifullah");
 }
 
 void shell() {
@@ -134,6 +134,7 @@ int check_command(char* command) {
 
 void execute_shell_builtin(char **command) {
     if (strcmp(*command, "cd") == 0) {
+        if  (command[1] == NULL) return;
         if (strcmp(command[1], "~") == 0) {
             chdir("/home");
             return;
@@ -173,7 +174,6 @@ void execute_command(char** command) {
     if(command[1] != NULL && command[2] == NULL) {
         char* param = command[1];
         char** arg = parse_input(param);
-//        print_arr(arg);
         int i = 1;
         while (*arg != NULL) {
             command[i++] = *arg;
@@ -186,7 +186,6 @@ void execute_command(char** command) {
     int status;
     int is_background = check_background(command);
     if (child_id == 0) {
-//        print_arr(command);
         execvp(*command, command);
         printf("Error\n");
         exit(0);
