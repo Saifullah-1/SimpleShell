@@ -89,25 +89,25 @@ void read_input(char string[], int size) {
 char** parse_input(char input[]) {
     size_t length = strlen(input);
     if (length > 0 && input[length - 1] =='\n') input[length - 1] = '\0';
-    char** tokens = (char**)malloc(sizeof(char*)); // Allocate memory for an array of pointers
+    char** tokens = (char**)malloc(sizeof(char*));
     if (tokens == NULL) {
         printf("Memory allocation failed\n");
         exit(1);
     }
-    char* token = strtok(input, " "); // Split input string by space
+    char* token = strtok(input, " "); 
     int i = 0;
     while (token != NULL) {
         remove_char(token, '\"');
-        tokens[i] = token; // Assign token to the array of pointers
+        tokens[i] = token; 
         i++;
-        tokens = (char**)realloc(tokens, (i + 1) * sizeof(char*)); // Resize array of pointers
+        tokens = (char**)realloc(tokens, (i + 1) * sizeof(char*)); 
         if (tokens == NULL) {
             printf("Memory reallocation failed\n");
             exit(1);
         }
         token = strtok(NULL, " ");
     }
-    tokens[i] = NULL; // Set the last element to NULL to indicate the end of tokens
+    tokens[i] = NULL; 
     return tokens;
 }
 
@@ -151,8 +151,8 @@ void execute_shell_builtin(char **command) {
             if(*(ptr+1) != NULL) strcat(init, " ");
             ptr++;
         }
-        variables[len] = strdup(strtok(init, "="));  // Tokenize and copy the variable part
-        values[len] = strdup(strtok(NULL, "\0"));    // Tokenize and copy the value part
+        variables[len] = strdup(strtok(init, "="));  
+        values[len] = strdup(strtok(NULL, "\0"));    
         len++;
     } else if(strcmp(*command, "echo") == 0) {
         char* var = command[1];
@@ -198,17 +198,17 @@ int check_background(char** command) {
     if (command == NULL)
         return 0;
     char** ptr = command;
-    int found = 0; // Flag to indicate if "&" is found
+    int found = 0; 
     while (*ptr != NULL) {
         if (strcmp(*ptr, "&") == 0)
-            found = 1; // Set the flag if "&" is found
+            found = 1; 
         else if (found)
-            *(ptr - 1) = *ptr; // If "&" was found previously, shift subsequent elements back
+            *(ptr - 1) = *ptr; 
         ptr++;
     }
     if (found)
-        *(ptr - 1) = NULL; // Null-terminate the modified command array if "&" was found
-    return found; // Return the flag indicating if "&" was found
+        *(ptr - 1) = NULL; 
+    return found; 
 }
 
 void remove_char(char* s, char c)
